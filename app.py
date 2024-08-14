@@ -21,7 +21,7 @@ app = Flask(__name__)
 model_name = "amazon/chronos-t5-tiny"
 
 # Use 'auto' for device_map to handle device placement automatically
-device_map = "cuda"  # Change this according to your setup, such as 'cpu' or 'cuda'
+device_map = "auto"  # Change this according to your setup, such as 'cpu' or 'cuda'
 
 @app.route("/inference/<string:token>")
 def get_inference(token):
