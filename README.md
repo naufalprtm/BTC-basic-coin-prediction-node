@@ -80,7 +80,11 @@ Verify your API key for the CoinGecko API and ensure the URL is correct.
 ###  Data Processing Issues: 
 Check the format of your downloaded files and ensure they are valid ZIP archives containing the expected data.
 
-
+# Use 'auto' for device_map to handle device placement automatically
+Update the in app.py:
+  ```
+device_map = "cuda"  # Change this according to your setup, such as 'cpu' or 'cuda'
+  ```
 ###  app.py
 This file contains the Flask application that serves as the main entry point for the API. It handles incoming requests, fetches data from the CoinGecko API, processes it using the ChronosPipeline for forecasting, and returns the result.
 
