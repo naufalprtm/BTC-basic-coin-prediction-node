@@ -144,6 +144,8 @@ git clone https://github.com/naufalprtm/BTC-basic-coin-prediction-node/tree/main
     ```
     {"level":"debug","msg":"Send Worker Data to chain","txHash":<tx-hash>,"time":<timestamp>,"message":"Success"}
     ```
+    
+https://github.com/naufalprtm/BTC-basic-coin-prediction-node/blob/main/Screenshot%202024-08-14%20011936.png
 
 ## Testing Inference Only
 
