@@ -35,43 +35,13 @@ The repository includes the following files:
 
 
 ## Setup
-
-Prerequisites
-Python 3.8+
-Flask: 
+### Ensure you have Docker and Docker Compose installed. If not, you can install them using the instructions on the [Docker website](https://docs.docker.com/get-docker/) and [Docker Compose website](https://docs.docker.com/compose/install/).
 
   ```
-pip install flask
-  ```
-Requests: 
+sudo apt-get update -y && sudo apt-get upgrade -y
 
   ```
-pip install requests
-  ```
 
-Pandas: 
-
-  ```
-pip install pandas
-  ```
-
-Torch: 
-
-  ```
-pip install torch
-  ```
-
-Chronos: 
-
-  ```
-Install from Hugging Face's library
-  ```
-
-Scikit-Learn: 
-
-  ```
-pip install scikit-learn
-  ```
 
 ###  Model Initialization Errors: 
 Ensure the correct device configuration (cuda or cpu) and required libraries are installed.
@@ -98,11 +68,7 @@ headers = {
 }
   ```
 
-Check the `docker-compose.yml` file for the detailed setup of each component.
 
-## Docker-Compose Setup
-
-A complete working example is provided in the `docker-compose.yml` file.
 
 ### Steps to Setup
 
@@ -112,6 +78,43 @@ A complete working example is provided in the `docker-compose.yml` file.
     configuration file and populate it with your variables:
     ```sh
     config.json
+    ```
+
+      ```  
+{
+    "wallet": {
+        "addressKeyName": "allorachain",
+        "addressRestoreMnemonic": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello",
+        "alloraHomeDir": "",
+        "gas": "1000000",
+        "gasAdjustment": 1.0,
+        "nodeRpc": "https://sentries-rpc.testnet-1.testnet.allora.network/",
+        "maxRetries": 1,
+        "delay": 1,
+        "submitTx": false
+    },
+"worker": [
+      {
+        "topicId": 3,
+        "inferenceEntrypointName": "api-worker-reputer",
+        "loopSeconds": 5,
+        "parameters": {
+          "InferenceEndpoint": "http://localhost:8000/inference/{Token}",
+          "Token": "BTC"
+        }
+      },
+
+      {
+        "topicId": 4, 
+        "inferenceEntrypointName": "api-worker-reputer",
+        "loopSeconds": 5,
+        "parameters": {
+          "InferenceEndpoint": "http://localhost:8000/inference/{Token}", 
+          "Token": "BTC" 
+        }
+      }
+    ]
+}
     ```
 
 3. **Initialize Worker**
@@ -133,7 +136,7 @@ A complete working example is provided in the `docker-compose.yml` file.
     
     Run the following command to start the worker node, inference, and updater nodes:
     ```sh
-    docker compose up --build
+   docker compose build && docker compose up -d && docker compose logs -f
     ```
     To confirm that the worker successfully sends the inferences to the chain, look for the following log:
     ```
