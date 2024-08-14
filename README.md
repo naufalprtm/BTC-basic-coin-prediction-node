@@ -73,6 +73,9 @@ headers = {
 ### Steps to Setup
 
 1. **Clone the Repository**
+
+git clone https://github.com/naufalprtm/BTC-basic-coin-prediction-node/tree/main && cd BTC-basic-coin-prediction-node
+
 2. **Configuration**
     
     configuration file and populate it with your variables:
