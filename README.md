@@ -232,6 +232,10 @@ headers = {
     
    ![Screenshot of the logs](https://github.com/naufalprtm/BTC-basic-coin-prediction-node/blob/main/Screenshot%202024-08-14%20011936.png)
 
+
+   ![Screenshot of the logs](https://github.com/naufalprtm/BTC-basic-coin-prediction-node/blob/main/Screenshot%202024-08-15%20211315.png)
+
+
 ## Testing Inference Only
 
 This setup allows you to develop your model without the need to bring up the offchain worker or the updater. To test the inference model only:
