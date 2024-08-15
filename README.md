@@ -43,6 +43,59 @@ sudo apt-get update -y && sudo apt-get upgrade -y
   ```
 
 
+Check GPU 
+  ```
+nvidia-smi
+  ```
+
+  ```
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.76.01              Driver Version: 552.44         CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4060 Ti     On  |   00000000:01:00.0  On |                  N/A |
+|  0%   49C    P8             13W /  160W |    1435MiB /   8188MiB |      7%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A        24      G   /Xwayland                                   N/A      |
++-----------------------------------------------------------------------------------------+
+
+  ```
+ plugin Docker For NVIDIA 
+  ```
+sudo apt-get install -y nvidia-container-toolkit
+sudo systemctl restart docker
+
+  ```
+Enable NVIDIA Runtime Globally: Ensure Docker uses the NVIDIA runtime by default. You can configure this by editing the Docker daemon configuration file /etc/docker/daemon.json:
+
+  ```
+sudo nano /etc/docker/daemon.json
+
+  ```
+  ```
+{
+  "runtimes": {
+    "nvidia": {
+      "path": "nvidia-container-runtime",
+      "runtimeArgs": []
+    }
+  },
+  "default-runtime": "nvidia"
+}
+
+
+  ```
+
 ###  Model Initialization Errors: 
 Ensure the correct device configuration (cuda or cpu) and required libraries are installed.
 ###  API Errors: 
