@@ -43,7 +43,7 @@ sudo apt-get update -y && sudo apt-get upgrade -y
   ```
 
 
-Check GPU 
+## Check GPU 
   ```
 nvidia-smi
   ```
@@ -70,13 +70,13 @@ nvidia-smi
 +-----------------------------------------------------------------------------------------+
 
   ```
- plugin Docker For NVIDIA 
+ ## plugin Docker For NVIDIA 
   ```
 sudo apt-get install -y nvidia-container-toolkit
 sudo systemctl restart docker
 
   ```
-Enable NVIDIA Runtime Globally: Ensure Docker uses the NVIDIA runtime by default. You can configure this by editing the Docker daemon configuration file /etc/docker/daemon.json:
+## Enable NVIDIA Runtime Globally: Ensure Docker uses the NVIDIA runtime by default. You can configure this by editing the Docker daemon configuration file /etc/docker/daemon.json:
 
   ```
 sudo nano /etc/docker/daemon.json
@@ -95,7 +95,32 @@ sudo nano /etc/docker/daemon.json
 
 
   ```
+## Add GPU Support in docker-compose.yml: Modify the docker-compose.yml file to include GPU access for your containers:
+  ```
+services:
+  inference:
+    container_name: inference-basic-btc-pred
+    build: .
+    command: python -u /app/app.py
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/inference/BTC"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - ./inference-data:/app/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
+
+  ```
 ###  Model Initialization Errors: 
 Ensure the correct device configuration (cuda or cpu) and required libraries are installed.
 ###  API Errors: 
