@@ -6,6 +6,7 @@ import torch
 from chronos import ChronosPipeline
 import time
 import traceback
+import subprocess
 
 # ANSI color codes
 RESET = "\033[0m"
@@ -20,8 +21,25 @@ app = Flask(__name__)
 # Define the Hugging Face model we will use
 model_name = "amazon/chronos-t5-tiny"
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+
+print(f"Using device: {device}")
+
 # Use 'auto' for device_map to handle device placement automatically
-device_map = "auto"  # Change this according to your setup, such as 'cpu' or 'cuda'
+device_map = "cuda" if device == "cuda" else "cpu"  # Change this according to your setup, such as 'cpu' or 'cuda'
+
+print(f"Device map: {device_map}")
+
+# Print nvidia-smi output if CUDA is available
+if device == "cuda":
+    try:
+        # Run the nvidia-smi command and capture its output
+        nvidia_smi_output = subprocess.check_output(["nvidia-smi"], universal_newlines=True)
+        print("NVIDIA-SMI Output:")
+        print(nvidia_smi_output)
+    except subprocess.CalledProcessError as e:
+        print("Error running nvidia-smi:", e)
 
 @app.route("/inference/<string:token>")
 def get_inference(token):
@@ -30,7 +48,7 @@ def get_inference(token):
     print(f"{INFO}[INFO] Received request at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(request_time))}{RESET}")
     print(f"{INFO}[INFO] Request Details - IP: {request.remote_addr}, Method: {request.method}, Path: {request.path}{RESET}")
     print(f"{INFO}[INFO] Request Headers: {request.headers}{RESET}")
-    
+
     if not token or token != "BTC":
         error_msg = "Token is required" if not token else "Token not supported"
         print(f"{ERROR}[ERROR] {error_msg}{RESET}")
@@ -40,9 +58,6 @@ def get_inference(token):
         return response
 
     try:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
-
         print(f"{INFO}[INFO] Initializing the ChronosPipeline with device_map=auto...{RESET}")
 
         # Load the model with the specified device and dtype
@@ -52,8 +67,19 @@ def get_inference(token):
             torch_dtype=dtype
         )
 
+        # Ensure the model is properly initialized before moving it
+        print(f"{INFO}[INFO] Moving model to device...{RESET}")
+        
+        pipeline.model = pipeline.model.to_empty(device=device)
+        pipeline.model = pipeline.model.to(device=device, dtype=dtype)
+        
+        # Log each parameter's shape and the device it's loaded on
+        for param in pipeline.model.parameters():
+            print(f"Param: {param.shape}, Device: {param.device}")
         print(f"{INFO}[INFO] Pipeline initialized successfully on {device} with dtype {dtype}.{RESET}")
     except Exception as e:
+        
+
         print(f"{ERROR}[ERROR] Pipeline initialization failed: {str(e)}{RESET}")
         traceback.print_exc()
         response = Response(json.dumps({"pipeline error": str(e)}), status=500, mimetype='application/json')
@@ -65,7 +91,7 @@ def get_inference(token):
     url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30&interval=daily"
     headers = {
         "accept": "application/json",
-        "x-cg-demo-api-key": "CG-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"  # Replace with your API key
+        "x-cg-demo-api-key": "CG-XXXXXXXXXXXXXXXXXXXXXXXXXX"  # Replace with your API key
     }
 
     print(f"{INFO}[INFO] Requesting historical price data from Coingecko API...{RESET}")
@@ -138,6 +164,10 @@ def get_inference(token):
     print(f"{DEBUG}[DEBUG] Context tensor content: {context}{RESET}")
 
     try:
+        # Ensure tensor dtype matches model dtype
+        if dtype == torch.bfloat16:
+            context = context.to(dtype=torch.bfloat16)
+
         print(f"{INFO}[INFO] Generating forecast for BTC price in USDT using the model...{RESET}")
         prediction_start_time = time.time()
         forecast = pipeline.predict(context, prediction_length)  # Shape [num_series, num_samples, prediction_length]

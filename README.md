@@ -23,16 +23,11 @@ The project consists of the following components:
 The repository includes the following files:
 
 - **`app.py`**: The Flask application that handles requests and performs time series forecasting.
-- **`model.py`**: Script to download, format data, and train the model.
-- **`updater.py`**: Utility functions for downloading data from Binance.
-- **`config.py`**: Configuration file containing paths for data and models.
 
 ## Components
 
 - **Worker**: The node that publishes inferences to the Allora chain.
 - **Inference**: A container that conducts inferences, maintains the model state, and responds to internal inference requests via a Flask application. This node operates with a basic linear regression model for price predictions.
-- **Updater**: A cron-like container designed to update the inference node's data by daily fetching the latest market information from Binance, ensuring the model stays current with new market trends.
-
 
 ## Setup
 ### Ensure you have Docker and Docker Compose installed. If not, you can install them using the instructions on the [Docker website](https://docs.docker.com/get-docker/) and [Docker Compose website](https://docs.docker.com/compose/install/).
