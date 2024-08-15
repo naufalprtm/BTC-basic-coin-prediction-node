@@ -69,8 +69,6 @@ def get_inference(token):
 
         # Ensure the model is properly initialized before moving it
         print(f"{INFO}[INFO] Moving model to device...{RESET}")
-        
-        pipeline.model = pipeline.model.to_empty(device=device)
         pipeline.model = pipeline.model.to(device=device, dtype=dtype)
         
         # Log each parameter's shape and the device it's loaded on
