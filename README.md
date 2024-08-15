@@ -70,12 +70,7 @@ nvidia-smi
 +-----------------------------------------------------------------------------------------+
 
   ```
- ## plugin Docker For NVIDIA 
-  ```
-sudo apt-get install -y nvidia-container-toolkit
-sudo systemctl restart docker
 
-  ```
 ## Enable NVIDIA Runtime Globally: Ensure Docker uses the NVIDIA runtime by default. You can configure this by editing the Docker daemon configuration file /etc/docker/daemon.json:
 
   ```
@@ -95,6 +90,14 @@ sudo nano /etc/docker/daemon.json
 
 
   ```
+ ## plugin Docker For NVIDIA 
+  ```
+sudo apt-get install -y nvidia-container-toolkit
+sudo systemctl restart docker
+
+  ```
+
+
 ## Add GPU Support in docker-compose.yml: Modify the docker-compose.yml file to include GPU access for your containers:
   ```
 services:
