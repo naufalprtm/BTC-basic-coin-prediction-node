@@ -7,6 +7,9 @@ from chronos import ChronosPipeline
 import time
 import traceback
 import subprocess
+import ctypes
+import numpy as np
+
 
 # ANSI color codes
 RESET = "\033[0m"
@@ -18,11 +21,27 @@ ERROR = "\033[91m"  # Red
 # Create our Flask app
 app = Flask(__name__)
 
+# Load the CUDA library
+try:
+    cuda_lib = ctypes.CDLL("./worker.so")
+    print(f"{SUCCESS}[SUCCESS] CUDA library loaded successfully.{RESET}")
+except Exception as e:
+    print(f"{ERROR}[ERROR] Failed to load CUDA library: {str(e)}{RESET}")
+    exit(1)
+
 # Define the Hugging Face model we will use
 model_name = "amazon/chronos-t5-tiny"
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+
+# Set up argument and return types for the CUDA function
+cuda_lib.runMatrixMul.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+    ctypes.c_int
+]
 
 print(f"Using device: {device}")
 
@@ -39,7 +58,35 @@ if device == "cuda":
         print("NVIDIA-SMI Output:")
         print(nvidia_smi_output)
     except subprocess.CalledProcessError as e:
-        print("Error running nvidia-smi:", e)
+        print(f"{ERROR}[ERROR] Error running nvidia-smi: {e}{RESET}")
+        
+def run_cuda_matrix_mul(A, B, N):
+    C = np.zeros((N, N), dtype=np.float32)
+    A_flat = A.flatten()
+    B_flat = B.flatten()
+    try:
+        cuda_lib.runMatrixMul(A_flat, B_flat, C.flatten(), N)
+    except Exception as e:
+        print(f"{ERROR}[ERROR] CUDA function call failed: {str(e)}{RESET}")
+        raise
+    return C
+
+@app.route("/run-cuda", methods=["POST"])
+def run_cuda():
+    try:
+        data = request.json
+        N = data.get("N")
+        A = np.array(data.get("A"), dtype=np.float32)
+        B = np.array(data.get("B"), dtype=np.float32)
+        
+        if A.shape != (N, N) or B.shape != (N, N):
+            return {"error": "Matrices A and B must be NxN"}, 400
+        
+        result = run_cuda_matrix_mul(A, B, N)
+        return {"result": result.tolist()}
+    
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 @app.route("/inference/<string:token>")
 def get_inference(token):
@@ -66,18 +113,19 @@ def get_inference(token):
             device_map=device_map,  # Ensure this is correctly set up
             torch_dtype=dtype
         )
-
+        pipeline.model = pipeline.model.to_empty()
         # Ensure the model is properly initialized before moving it
-        print(f"{INFO}[INFO] Moving model to device...{RESET}")
-        pipeline.model = pipeline.model.to(device=device, dtype=dtype)
+        model = pipeline.model
+        if device == "cuda":
+           model = model.to("cuda")
+        else:  
+           model = model.to("cpu")
         
         # Log each parameter's shape and the device it's loaded on
         for param in pipeline.model.parameters():
             print(f"Param: {param.shape}, Device: {param.device}")
         print(f"{INFO}[INFO] Pipeline initialized successfully on {device} with dtype {dtype}.{RESET}")
     except Exception as e:
-        
-
         print(f"{ERROR}[ERROR] Pipeline initialization failed: {str(e)}{RESET}")
         traceback.print_exc()
         response = Response(json.dumps({"pipeline error": str(e)}), status=500, mimetype='application/json')
@@ -89,7 +137,7 @@ def get_inference(token):
     url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30&interval=daily"
     headers = {
         "accept": "application/json",
-        "x-cg-demo-api-key": "CG-XXXXXXXXXXXXXXXXXXXXXXXXXX"  # Replace with your API key
+        "x-cg-demo-api-key": "CG-XXXXXXXXXXXXXXXXXXXXXXXX"  # Replace with your API key
     }
 
     print(f"{INFO}[INFO] Requesting historical price data from Coingecko API...{RESET}")
