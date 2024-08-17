@@ -22,18 +22,21 @@ ERROR = "\033[91m"  # Red
 app = Flask(__name__)
 
 # Load the CUDA library
+# Initialize CUDA library
+use_cuda = True
 try:
     cuda_lib = ctypes.CDLL("./worker.so")
     print(f"{SUCCESS}[SUCCESS] CUDA library loaded successfully.{RESET}")
 except Exception as e:
     print(f"{ERROR}[ERROR] Failed to load CUDA library: {str(e)}{RESET}")
-    exit(1)
+    use_cuda = False
 
 # Define the Hugging Face model we will use
 model_name = "amazon/chronos-t5-tiny"
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+# Detect if CUDA is available and set the device and dtype accordingly
+device = "cuda" if torch.cuda.is_available() and use_cuda else "cpu"
+dtype = torch.bfloat16 if torch.cuda.is_available() and use_cuda else torch.float32
 
 # Set up argument and return types for the CUDA function
 cuda_lib.runMatrixMul.argtypes = [
@@ -137,7 +140,7 @@ def get_inference(token):
     url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30&interval=daily"
     headers = {
         "accept": "application/json",
-        "x-cg-demo-api-key": "CG-XXXXXXXXXXXXXXXXXXXXXXXX"  # Replace with your API key
+        "x-cg-demo-api-key": "CG-XXXXXXXXXXXXXXXXXXXXX"  # Replace with your API key
     }
 
     print(f"{INFO}[INFO] Requesting historical price data from Coingecko API...{RESET}")

@@ -25,17 +25,36 @@ void checkCudaVersion() {
     printf("CUDA Runtime Version: %d\n", runtimeVersion);
 }
 
-// CUDA kernel for matrix multiplication
+// CUDA kernel for matrix multiplication with shared memory
 extern "C" __global__ void matrixMul(float* A, float* B, float* C, int N) {
+    __shared__ float shared_A[16][16];
+    __shared__ float shared_B[16][16];
+
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
+    float value = 0;
 
-    // Ensure we are within matrix bounds
-    if (row < N && col < N) {
-        float value = 0;
-        for (int k = 0; k < N; ++k) {
-            value += A[row * N + k] * B[k * N + col];
+    for (int i = 0; i < (N + 15) / 16; ++i) {
+        if (i * 16 + threadIdx.x < N && row < N)
+            shared_A[threadIdx.y][threadIdx.x] = A[row * N + i * 16 + threadIdx.x];
+        else
+            shared_A[threadIdx.y][threadIdx.x] = 0.0;
+
+        if (i * 16 + threadIdx.y < N && col < N)
+            shared_B[threadIdx.y][threadIdx.x] = B[(i * 16 + threadIdx.y) * N + col];
+        else
+            shared_B[threadIdx.y][threadIdx.x] = 0.0;
+
+        __syncthreads();
+
+        for (int j = 0; j < 16; ++j) {
+            value += shared_A[threadIdx.y][j] * shared_B[j][threadIdx.x];
         }
+
+        __syncthreads();
+    }
+
+    if (row < N && col < N) {
         C[row * N + col] = value;
     }
 }
