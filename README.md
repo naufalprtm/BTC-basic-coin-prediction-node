@@ -216,8 +216,12 @@ headers = {
             |-----------------------------------------+------------------------+----------------------+
     
        
-       
-https://hub.docker.com/r/nvidia/cuda/tags?page=6&page_size=&name=&ordering=
+- [Docker Hub](https://hub.docker.com/r/nvidia/cuda/tags?page=6&page_size=&name=&ordering=)       
+
+
+   ![Screenshot of the logs](https://github.com/naufalprtm/BTC-basic-coin-prediction-node/blob/main/Screenshot%202024-08-18%20234443.png)
+
+
 
 3. **Initialize Worker**
     
