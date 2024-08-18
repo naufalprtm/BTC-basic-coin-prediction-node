@@ -198,6 +198,21 @@ headers = {
            ]
         }
     ```
+Dockerfile
+    ```
+            # Stage 2: Build CUDA environment
+            FROM nvidia/cuda:12.4.0-base-ubuntu22.04 AS cuda_env
+    ```
+    change this cuda:12.4.0-base-ubuntu22.04 
+    ubuntu22.04 / ubuntu 20.04
+    cuda:12.4.0 ### find this from
+    ```
+            +-----------------------------------------------------------------------------------------+
+            | NVIDIA-SMI 550.76.01              Driver Version: 552.44         CUDA Version: 12.4     |
+            |-----------------------------------------+------------------------+----------------------+
+    
+       ``` 
+https://hub.docker.com/r/nvidia/cuda/tags?page=6&page_size=&name=&ordering=
 
 3. **Initialize Worker**
     
